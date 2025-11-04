@@ -1,0 +1,153 @@
+@extends('admin.layouts.app')
+
+@section('title', 'Import {{MODEL_NAME_PLURAL}}')
+
+@section('content')
+    <div class="space-y-6">
+        <!-- Page Header -->
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Import {{MODEL_NAME_PLURAL}}</h1>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Upload a CSV or Excel file (.csv, .xlsx, .xls) to import {{MODEL_NAME_LOWER}}s</p>
+        </div>
+
+        @if (session('success'))
+            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                <p class="text-sm text-green-600 dark:text-green-400">{{ session('success') }}</p>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                <p class="text-sm text-red-600 dark:text-red-400">{{ session('error') }}</p>
+            </div>
+        @endif
+
+        @if (session('import_errors'))
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
+                <p class="text-sm text-yellow-600 dark:text-yellow-400 font-semibold mb-2">Import Errors:</p>
+                <ul class="list-disc list-inside space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
+                    @foreach (session('import_errors') as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <!-- Import Form -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <form action="{{ route('{{ROUTE_NAME}}.import') }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+                @csrf
+
+                <!-- File Upload -->
+                <div>
+                    <label for="file" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        File (CSV or Excel)
+                    </label>
+                    <input type="file" name="file" id="file" accept=".csv,.txt,.xlsx,.xls" required
+                        class="dropify" data-height="200" data-allowed-file-extensions="csv txt xlsx xls">
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        Please upload a CSV or Excel file (.csv, .xlsx, .xls) with the following columns:
+                    </p>
+                    <ul class="mt-2 list-disc list-inside text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                        @php
+                            $model = new \App\Models\{{MODEL_NAME}}();
+                            $fillableFields = $model->getFillable();
+                        @endphp
+                        @foreach($fillableFields as $field)
+                            <li>{{ ucfirst(str_replace('_', ' ', $field)) }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                @error('file')
+                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                        <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    </div>
+                @enderror
+
+                <!-- Sample CSV Format -->
+                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">Sample Format (CSV/Excel):</p>
+                        <div class="flex gap-2">
+                            <a href="{{ route('{{ROUTE_NAME}}.downloadSample', ['format' => 'csv']) }}"
+                                class="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Download CSV
+                            </a>
+                            <a href="{{ route('{{ROUTE_NAME}}.downloadSample', ['format' => 'xlsx']) }}"
+                                class="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Download Excel
+                            </a>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <pre class="text-xs text-gray-600 dark:text-gray-400 font-mono">{{CSV_SAMPLE}}</pre>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-end gap-4 pt-8 border-t-2 border-gray-100 dark:border-gray-700 mt-8">
+                    <a href="{{ route('{{ROUTE_NAME}}.index') }}"
+                        class="px-8 py-3 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors font-semibold shadow-md hover:shadow-lg border-2 border-gray-200 dark:border-gray-600">
+                        Cancel
+                    </a>
+                    <button type="submit" id="submit-btn"
+                        class="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-semibold shadow-md hover:shadow-lg hover:scale-105 transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+                        <span id="submit-text">
+                            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            Import Data
+                        </span>
+                        <span id="submit-loader" class="hidden">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Importing...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @push('scripts')
+        <script>
+            $(document).ready(function() {
+                // Initialize Dropify
+                $('#file').dropify({
+                    messages: {
+                        'default': 'Drag and drop a file here or click',
+                        'replace': 'Drag and drop or click to replace',
+                        'remove': 'Remove',
+                        'error': 'Ooops, something wrong happened.'
+                    },
+                    error: {
+                        'fileSize': 'The file size is too big ({{ config('filesystems.max_file_size', '2M') }} max).',
+                        'fileExtension': 'The file extension is not allowed. Allowed extensions: .csv, .txt, .xlsx, .xls'
+                    }
+                });
+
+                // Handle form submission with loading state
+                const form = $('form');
+                const submitBtn = $('#submit-btn');
+                const submitText = $('#submit-text');
+                const submitLoader = $('#submit-loader');
+
+                form.on('submit', function(e) {
+                    // Disable submit button and show loader
+                    submitBtn.prop('disabled', true);
+                    submitText.addClass('hidden');
+                    submitLoader.removeClass('hidden');
+                });
+            });
+        </script>
+    @endpush
+@endsection

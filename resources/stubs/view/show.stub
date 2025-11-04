@@ -1,0 +1,84 @@
+@extends('admin.layouts.app')
+
+@section('title', '{{MODEL_NAME_TITLE}} Details')
+
+@section('content')
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">{{MODEL_NAME_TITLE}} Details</h1>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">View {{MODEL_NAME_LOWER}} information</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{{ route('{{ROUTE_NAME}}.edit', ${{MODEL_NAME_CAMEL}}) }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Edit
+            </a>
+            <a href="{{ route('{{ROUTE_NAME}}.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">{{MODEL_NAME_TITLE}} Information</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">Details about this {{MODEL_NAME_LOWER}}.</p>
+        </div>
+        <div class="border-t border-gray-200 dark:border-gray-700">
+            <dl>
+                @foreach(${{MODEL_NAME_CAMEL}}->getFillable() as $field)
+                    <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-300">
+                            {{ ucfirst(str_replace('_', ' ', $field)) }}
+                        </dt>
+                        <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
+                            @php
+                                $fieldValue = ${{MODEL_NAME_CAMEL}}->$field ?? null;
+                                $isImageField = in_array(strtolower($field), ['filename', 'image', 'photo', 'picture', 'thumbnail', 'avatar']) ||
+                                                (strpos(strtolower($field), 'image') !== false) ||
+                                                (strpos(strtolower($field), 'photo') !== false) ||
+                                                (strpos(strtolower($field), 'file') !== false);
+                                $isImageFile = $fieldValue && (strpos(strtolower($fieldValue), '.jpg') !== false ||
+                                                               strpos(strtolower($fieldValue), '.jpeg') !== false ||
+                                                               strpos(strtolower($fieldValue), '.png') !== false ||
+                                                               strpos(strtolower($fieldValue), '.gif') !== false ||
+                                                               strpos(strtolower($fieldValue), '.webp') !== false ||
+                                                               strpos(strtolower($fieldValue), '.svg') !== false);
+                            @endphp
+                            @if($isImageField && $isImageFile && $fieldValue)
+                                <div class="flex items-center justify-center w-full py-4">
+                                    @php
+                                        $imageUrl = str_starts_with($fieldValue, 'http') ? $fieldValue : Storage::url($fieldValue);
+                                    @endphp
+                                    <img src="{{ $imageUrl }}"
+                                         alt="{{ ucfirst(str_replace('_', ' ', $field)) }}"
+                                         class="max-w-full max-h-96 object-contain mx-auto rounded-lg shadow-md">
+                                </div>
+                            @else
+                                {{ $fieldValue ?? 'N/A' }}
+                            @endif
+                        </dd>
+                    </div>
+                @endforeach
+
+                <div class="bg-white dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-300">Created At</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
+                        {{ ${{MODEL_NAME_CAMEL}}->created_at->format('M d, Y H:i') }}
+                    </dd>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-300">Updated At</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
+                        {{ ${{MODEL_NAME_CAMEL}}->updated_at->format('M d, Y H:i') }}
+                    </dd>
+                </div>
+            </dl>
+            </div>
+        </div>
+</div>
+@endsection

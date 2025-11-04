@@ -1,0 +1,182 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Enable dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* ===== ADMIN PANEL LIGHT MODE STYLES ===== */
+.admin-panel:not(.dark) {
+  background-color: #f9fafb;
+  color-scheme: light;
+}
+
+.admin-panel:not(.dark) body {
+  background-color: #f9fafb;
+}
+
+.admin-panel:not(.dark) #body {
+  background-color: #f9fafb;
+}
+
+/* Light mode - ensure all containers are light */
+.admin-panel:not(.dark) .flex.h-screen {
+  background-color: #f9fafb;
+}
+
+.admin-panel:not(.dark) aside {
+  background-color: #ffffff;
+  border-color: #e5e7eb;
+}
+
+.admin-panel:not(.dark) header {
+  background-color: #ffffff;
+  border-color: #e5e7eb;
+}
+
+.admin-panel:not(.dark) h1 {
+  color: #111827;
+}
+
+.admin-panel:not(.dark) .text-gray-700 {
+  color: #374151;
+}
+
+.admin-panel:not(.dark) .text-gray-500 {
+  color: #6b7280;
+}
+
+.admin-panel:not(.dark) .text-gray-900 {
+  color: #111827;
+}
+
+.admin-panel:not(.dark) .text-white {
+  color: #fff;
+}
+
+.admin-panel:not(.dark) .hover\:bg-gray-100:hover {
+  background-color: #f3f4f6;
+}
+
+.admin-panel:not(.dark) .hover\:text-gray-700:hover {
+  color: #374151;
+}
+
+.admin-panel:not(.dark) .hover\:text-gray-900:hover {
+  color: #111827;
+}
+
+/* ===== ADMIN PANEL DARK MODE STYLES ===== */
+.admin-panel.dark {
+  background-color: #111827;
+  color-scheme: dark;
+}
+
+.admin-panel.dark body {
+  background-color: #111827;
+}
+
+.admin-panel.dark #body {
+  background-color: #111827;
+}
+
+/* Dark mode - ensure all containers are dark */
+.admin-panel.dark .flex.h-screen {
+  background-color: #111827;
+}
+
+.admin-panel.dark aside {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.admin-panel.dark header {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.admin-panel.dark h1 {
+  color: #ffffff;
+}
+
+.admin-panel.dark .text-gray-700 {
+  color: #d1d5db;
+}
+
+.admin-panel.dark .text-gray-500 {
+  color: #9ca3af;
+}
+
+.admin-panel.dark .text-gray-900 {
+  color: #ffffff;
+}
+
+.admin-panel.dark .text-white {
+  color: #ffffff;
+}
+
+.admin-panel.dark .hover\:bg-gray-100:hover {
+  background-color: #374151;
+}
+
+.admin-panel.dark .hover\:text-gray-700:hover {
+  color: #e5e7eb;
+}
+
+.admin-panel.dark .hover\:text-gray-900:hover {
+  color: #ffffff;
+}
+
+/* ===== ADMIN PANEL MAIN CONTENT AREA ===== */
+.admin-panel:not(.dark) main {
+  background-color: #f9fafb;
+}
+
+.admin-panel.dark main {
+  background-color: #111827;
+}
+
+/* ===== ADMIN PANEL CARDS AND COMPONENTS ===== */
+.admin-panel:not(.dark) .bg-white {
+  background-color: #ffffff;
+}
+
+.admin-panel.dark .bg-white {
+  background-color: #1f2937;
+}
+
+.admin-panel:not(.dark) .bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+.admin-panel.dark .bg-gray-50 {
+  background-color: #111827;
+}
+
+.admin-panel:not(.dark) .bg-gray-100 {
+  background-color: #f3f4f6;
+}
+
+.admin-panel.dark .bg-gray-100 {
+  background-color: #374151;
+}
+
+.tagify__input::before {
+  color: #d1d5db !important;
+}
