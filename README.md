@@ -17,29 +17,29 @@ The package will be automatically discovered by Laravel 12.
 After installation, publish all assets (migrations, seeders, models, services, components, and stubs):
 
 ```bash
-php artisan vendor:publish --tag=laravel-generator
+php artisan vendor:publish --tag=code-forge
 ```
 
 Or publish specific assets:
 
 ```bash
 # Publish migrations only
-php artisan vendor:publish --tag=laravel-generator-migrations
+php artisan vendor:publish --tag=code-forge-migrations
 
 # Publish seeders only
-php artisan vendor:publish --tag=laravel-generator-seeders
+php artisan vendor:publish --tag=code-forge-seeders
 
 # Publish models only
-php artisan vendor:publish --tag=laravel-generator-models
+php artisan vendor:publish --tag=code-forge-models
 
 # Publish services only
-php artisan vendor:publish --tag=laravel-generator-services
+php artisan vendor:publish --tag=code-forge-services
 
 # Publish components only
-php artisan vendor:publish --tag=laravel-generator-components
+php artisan vendor:publish --tag=code-forge-components
 
 # Publish stubs only
-php artisan vendor:publish --tag=laravel-generator-stubs
+php artisan vendor:publish --tag=code-forge-stubs
 ```
 
 ### Run Migrations and Seeders
@@ -191,10 +191,10 @@ The generator creates the following files:
 You can publish the stubs to customize the generated templates:
 
 ```bash
-php artisan vendor:publish --tag=laravel-generator-stubs
+php artisan vendor:publish --tag=code-forge-stubs
 ```
 
-This will publish the stubs to `resources/stubs/laravel-generator/` where you can customize them.
+This will publish the stubs to `resources/stubs/code-forge/` where you can customize them.
 
 ## Requirements
 

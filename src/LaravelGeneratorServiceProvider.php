@@ -31,32 +31,32 @@ class LaravelGeneratorServiceProvider extends ServiceProvider
         // Publish migrations
         $this->publishes([
             __DIR__ . '/../database/migrations' => database_path('migrations'),
-        ], 'laravel-generator-migrations');
+        ], 'code-forge-migrations');
 
         // Publish seeders
         $this->publishes([
             __DIR__ . '/../database/seeders' => database_path('seeders'),
-        ], 'laravel-generator-seeders');
+        ], 'code-forge-seeders');
 
         // Publish models
         $this->publishes([
             __DIR__ . '/../src/Models' => app_path('Models'),
-        ], 'laravel-generator-models');
+        ], 'code-forge-models');
 
         // Publish services
         $this->publishes([
             __DIR__ . '/../src/Services' => app_path('Services'),
-        ], 'laravel-generator-services');
+        ], 'code-forge-services');
 
         // Publish components
         $this->publishes([
             __DIR__ . '/../resources/views/components' => resource_path('views/components'),
-        ], 'laravel-generator-components');
+        ], 'code-forge-components');
 
         // Publish stubs
         $this->publishes([
-            __DIR__ . '/../stubs' => resource_path('stubs/laravel-generator'),
-        ], 'laravel-generator-stubs');
+            __DIR__ . '/../stubs' => resource_path('stubs/code-forge'),
+        ], 'code-forge-stubs');
 
         // Publish all assets at once
         $this->publishes([
@@ -65,7 +65,7 @@ class LaravelGeneratorServiceProvider extends ServiceProvider
             __DIR__ . '/../src/Models' => app_path('Models'),
             __DIR__ . '/../src/Services' => app_path('Services'),
             __DIR__ . '/../resources/views/components' => resource_path('views/components'),
-            __DIR__ . '/../stubs' => resource_path('stubs/laravel-generator'),
-        ], 'laravel-generator');
+            __DIR__ . '/../stubs' => resource_path('stubs/code-forge'),
+        ], 'code-forge');
     }
 }

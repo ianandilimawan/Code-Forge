@@ -17,32 +17,32 @@ The package will be automatically registered because it uses auto-discovery in L
 After installation, publish all assets (migrations, seeders, models, services, components, and stubs):
 
 ```bash
-php artisan vendor:publish --tag=laravel-generator
+php artisan vendor:publish --tag=code-forge
 ```
 
 Or publish specific assets:
 
 ```bash
 # Publish all at once
-php artisan vendor:publish --tag=laravel-generator
+php artisan vendor:publish --tag=code-forge
 
 # Publish migrations only
-php artisan vendor:publish --tag=laravel-generator-migrations
+php artisan vendor:publish --tag=code-forge-migrations
 
 # Publish seeders only
-php artisan vendor:publish --tag=laravel-generator-seeders
+php artisan vendor:publish --tag=code-forge-seeders
 
 # Publish models only
-php artisan vendor:publish --tag=laravel-generator-models
+php artisan vendor:publish --tag=code-forge-models
 
 # Publish services only
-php artisan vendor:publish --tag=laravel-generator-services
+php artisan vendor:publish --tag=code-forge-services
 
 # Publish components only
-php artisan vendor:publish --tag=laravel-generator-components
+php artisan vendor:publish --tag=code-forge-components
 
 # Publish stubs only (for customization)
-php artisan vendor:publish --tag=laravel-generator-stubs
+php artisan vendor:publish --tag=code-forge-stubs
 ```
 
 ### 3. Run Migrations and Seeders
@@ -60,10 +60,10 @@ php artisan db:seed --class=MenuSeeder
 If you want to customize stub templates:
 
 ```bash
-php artisan vendor:publish --tag=laravel-generator-stubs
+php artisan vendor:publish --tag=code-forge-stubs
 ```
 
-Stub files will be copied to `resources/stubs/laravel-generator/` for customization.
+Stub files will be copied to `resources/stubs/code-forge/` for customization.
 
 ### 5. Use Generator
 

@@ -42,7 +42,7 @@ class FileUtil
 
         if (!File::exists($stubPath)) {
             // Try fallback to user's stubs directory if package stub doesn't exist
-            $fallbackPath = resource_path("stubs/laravel-generator/{$stubName}.stub");
+            $fallbackPath = resource_path("stubs/code-forge/{$stubName}.stub");
             if (File::exists($fallbackPath)) {
                 $stubPath = $fallbackPath;
             } else {
