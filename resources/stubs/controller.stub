@@ -1,0 +1,491 @@
+<?php
+
+namespace {{CONTROLLER_NAMESPACE}};
+
+use App\Http\Controllers\Controller;
+use App\Services\FileUploadService;
+use App\Services\ActivityLogService;
+use {{NAMESPACE}}\{{MODEL_NAME}};
+use {{REQUEST_NAMESPACE}}\{{CREATE_REQUEST_CLASS}};
+use {{REQUEST_NAMESPACE}}\{{UPDATE_REQUEST_CLASS}};
+use Illuminate\Http\Request;
+
+class {{CONTROLLER_NAME}} extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $user = auth()->user();
+
+            if (!$user) {
+                abort(403);
+            }
+
+            // Administrator role has access to all actions
+            if ($user->hasRole('administrator') || $user->hasRole('admin')) {
+                return $next($request);
+            }
+
+            $routeName = $request->route()->getName();
+            $modelNameSnake = '{{MODEL_NAME_SNAKE}}';
+
+            if (str_contains($routeName, '.index') || str_contains($routeName, '.show')) {
+                abort_unless($user->hasPermission("view-{$modelNameSnake}s"), 403);
+            } elseif (str_contains($routeName, '.create') || str_contains($routeName, '.store')) {
+                abort_unless($user->hasPermission("create-{$modelNameSnake}"), 403);
+            } elseif (str_contains($routeName, '.edit') || str_contains($routeName, '.update')) {
+                abort_unless($user->hasPermission("edit-{$modelNameSnake}"), 403);
+            } elseif (str_contains($routeName, '.destroy')) {
+                abort_unless($user->hasPermission("delete-{$modelNameSnake}"), 403);
+            } elseif (str_contains($routeName, '.import') || str_contains($routeName, '.importForm')) {
+                abort_unless($user->hasPermission("create-{$modelNameSnake}"), 403);
+            }
+
+            return $next($request);
+        });
+    }
+
+    public function index()
+    {
+        ${{MODEL_VARIABLE_PLURAL}} = {{MODEL_NAME}}::paginate(10);
+        return view('{{VIEW_PATH}}.index', compact('{{MODEL_VARIABLE_PLURAL}}'));
+    }
+
+    public function create()
+    {
+        ${{MODEL_VARIABLE}} = new {{MODEL_NAME}}();
+        return view('{{VIEW_PATH}}.create', compact('{{MODEL_VARIABLE}}'));
+    }
+
+    public function store({{CREATE_REQUEST_CLASS}} $request)
+    {
+        $data = $request->validated();
+
+        // Handle file uploads
+        $fileFields = $this->getFileFields();
+        foreach ($fileFields as $fieldName) {
+            if ($request->hasFile($fieldName)) {
+                $data[$fieldName] = FileUploadService::uploadFile(
+                    $request->file($fieldName),
+                    null,
+                    '{{MODEL_NAME_SNAKE}}'
+                );
+            } else {
+                // Remove file field from data if no file uploaded
+                unset($data[$fieldName]);
+            }
+        }
+
+        ${{MODEL_VARIABLE}} = {{MODEL_NAME}}::create($data);
+
+        // Log activity
+        ActivityLogService::logCreate(${{MODEL_VARIABLE}});
+
+        return redirect()->route('{{ROUTE_NAME}}.index')->with('success', '{{MODEL_NAME}} created successfully.');
+    }
+
+    public function show({{MODEL_NAME}} ${{MODEL_VARIABLE}})
+    {
+        return view('{{VIEW_PATH}}.show', compact('{{MODEL_VARIABLE}}'));
+    }
+
+    public function edit({{MODEL_NAME}} ${{MODEL_VARIABLE}})
+    {
+        return view('{{VIEW_PATH}}.edit', compact('{{MODEL_VARIABLE}}'));
+    }
+
+    public function update({{UPDATE_REQUEST_CLASS}} $request, {{MODEL_NAME}} ${{MODEL_VARIABLE}})
+    {
+        $data = $request->validated();
+
+        // Handle file uploads
+        // Important: Only update file field if a new file is uploaded
+        // If no new file is uploaded, keep the existing file path in database
+        $fileFields = $this->getFileFields();
+        foreach ($fileFields as $fieldName) {
+            if ($request->hasFile($fieldName)) {
+                // User uploaded a new file - replace the old one
+                $oldFilePath = ${{MODEL_VARIABLE}}->{$fieldName} ?? null;
+                $data[$fieldName] = FileUploadService::uploadFile(
+                    $request->file($fieldName),
+                    $oldFilePath,
+                    '{{MODEL_NAME_SNAKE}}'
+                );
+            } else {
+                // No new file uploaded - keep the existing file
+                // Remove from $data array so it won't be updated in database
+                // This ensures the existing file path in database remains unchanged
+                // Example: If user only updates title, the file field will not be touched
+                unset($data[$fieldName]);
+            }
+        }
+
+        // Get old values before update for logging
+        $oldValues = ${{MODEL_VARIABLE}}->getOriginal();
+
+        // Update only the fields that are in $data array
+        // File fields not in $data will keep their existing values from database
+        ${{MODEL_VARIABLE}}->update($data);
+
+        // Log activity
+        ActivityLogService::logUpdate(${{MODEL_VARIABLE}}, $oldValues);
+
+        return redirect()->route('{{ROUTE_NAME}}.index')->with('success', '{{MODEL_NAME}} updated successfully.');
+    }
+
+    public function destroy({{MODEL_NAME}} ${{MODEL_VARIABLE}})
+    {
+        // Delete associated files
+        $fileFields = $this->getFileFields();
+        foreach ($fileFields as $fieldName) {
+            $filePath = ${{MODEL_VARIABLE}}->{$fieldName} ?? null;
+            if ($filePath) {
+                FileUploadService::deleteFile($filePath);
+            }
+        }
+
+        // Log activity before delete
+        ActivityLogService::logDelete(${{MODEL_VARIABLE}});
+
+        ${{MODEL_VARIABLE}}->delete();
+        return redirect()->route('{{ROUTE_NAME}}.index')->with('success', '{{MODEL_NAME}} deleted successfully.');
+    }
+
+    public function importForm()
+    {
+        return view('{{VIEW_PATH}}.import');
+    }
+
+    public function downloadSample($format = 'csv')
+    {
+        $model = new {{MODEL_NAME}}();
+        $fillableFields = $model->getFillable();
+
+        if (!in_array($format, ['csv', 'xlsx'])) {
+            $format = 'csv';
+        }
+
+        // Generate sample data
+        $headers = $fillableFields;
+        $sampleRow = $this->getSampleRowData($fillableFields);
+
+        if ($format === 'csv') {
+            return $this->downloadCsvSample($headers, $sampleRow);
+        } else {
+            return $this->downloadExcelSample($headers, $sampleRow);
+        }
+    }
+
+    private function getSampleRowData($fillableFields)
+    {
+        $sampleData = [];
+
+        foreach ($fillableFields as $field) {
+            $sampleData[] = $this->getSampleValueForField($field);
+        }
+
+        return $sampleData;
+    }
+
+    private function getSampleValueForField($fieldName)
+    {
+        // Generate sample value based on field name patterns
+        $lowerField = strtolower($fieldName);
+
+        if (str_contains($lowerField, 'email')) {
+            return 'sample@example.com';
+        } elseif (str_contains($lowerField, 'phone')) {
+            return '081234567890';
+        } elseif (str_contains($lowerField, 'date') || str_contains($lowerField, 'at')) {
+            return '2024-01-01';
+        } elseif (str_contains($lowerField, 'price') || str_contains($lowerField, 'cost') || str_contains($lowerField, 'amount')) {
+            return '100000';
+        } elseif (str_contains($lowerField, 'quantity') || str_contains($lowerField, 'qty') || str_contains($lowerField, 'count')) {
+            return '1';
+        } elseif (str_contains($lowerField, 'status')) {
+            return 'active';
+        } elseif (str_contains($lowerField, 'name')) {
+            return 'Sample Name';
+        } elseif (str_contains($lowerField, 'title')) {
+            return 'Sample Title';
+        } elseif (str_contains($lowerField, 'description')) {
+            return 'Sample Description';
+        } else {
+            return 'Sample Value';
+        }
+    }
+
+    private function downloadCsvSample($headers, $sampleRow)
+    {
+        $filename = '{{MODEL_NAME_SNAKE}}_sample.csv';
+
+        // Create CSV content
+        $output = fopen('php://temp', 'r+');
+        fputcsv($output, $headers);
+        fputcsv($output, $sampleRow);
+        rewind($output);
+        $csvContent = stream_get_contents($output);
+        fclose($output);
+
+        return response($csvContent, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function downloadExcelSample($headers, $sampleRow)
+    {
+        // Check if PhpSpreadsheet is available
+        if (!class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class)) {
+            return redirect()->route('{{ROUTE_NAME}}.importForm')->with('error', 'PhpSpreadsheet library is not installed. Please run: composer require phpoffice/phpspreadsheet');
+        }
+
+        try {
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Set headers and sample row
+            $colIndex = 0;
+            foreach ($headers as $index => $header) {
+                $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
+                $sheet->setCellValue($col . '1', $header);
+                $sheet->getStyle($col . '1')->getFont()->setBold(true);
+
+                // Set sample row value
+                if (isset($sampleRow[$index])) {
+                    $sheet->setCellValue($col . '2', $sampleRow[$index]);
+                }
+
+                // Auto-size column
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+
+                $colIndex++;
+            }
+
+            $filename = '{{MODEL_NAME_SNAKE}}_sample.xlsx';
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+            ob_start();
+            $writer->save('php://output');
+            $content = ob_get_clean();
+
+            return response($content, 200, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->route('{{ROUTE_NAME}}.importForm')->with('error', 'Failed to generate Excel file: ' . $e->getMessage());
+        }
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt,xlsx,xls',
+        ]);
+
+        $file = $request->file('file');
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        // Get fillable fields from model
+        $model = new {{MODEL_NAME}}();
+        $fillableFields = $model->getFillable();
+
+        // Read file based on extension
+        if (in_array($extension, ['xlsx', 'xls'])) {
+            return $this->importExcel($file, $fillableFields);
+        } else {
+            return $this->importCsv($file, $fillableFields);
+        }
+    }
+
+    private function importCsv($file, $fillableFields)
+    {
+        $handle = fopen($file->getRealPath(), 'r');
+
+        if ($handle === false) {
+            return redirect()->route('{{ROUTE_NAME}}.importForm')->with('error', 'Failed to open file.');
+        }
+
+        // Read header row
+        $headers = fgetcsv($handle);
+        if ($headers === false) {
+            fclose($handle);
+            return redirect()->route('{{ROUTE_NAME}}.importForm')->with('error', 'File is empty or invalid.');
+        }
+
+        // Clean headers (remove BOM if present)
+        $headers = array_map(function($header) {
+            return trim(str_replace("\xEF\xBB\xBF", '', $header));
+        }, $headers);
+
+        // Map headers to field names
+        $fieldMap = $this->mapHeadersToFields($headers, $fillableFields);
+
+        $imported = 0;
+        $errors = [];
+        $rowNumber = 1;
+
+        // Read data rows
+        while (($row = fgetcsv($handle)) !== false) {
+            $rowNumber++;
+
+            if (count($row) < count($headers)) {
+                $errors[] = "Row {$rowNumber}: Insufficient columns.";
+                continue;
+            }
+
+            $result = $this->processRow($row, $fieldMap, $rowNumber);
+            if ($result['success']) {
+                $imported++;
+            } else {
+                $errors[] = $result['error'];
+            }
+        }
+
+        fclose($handle);
+
+        return $this->returnImportResult($imported, $errors);
+    }
+
+    private function importExcel($file, $fillableFields)
+    {
+        // Check if PhpSpreadsheet is available
+        if (!class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class)) {
+            return redirect()->route('{{ROUTE_NAME}}.importForm')->with('error', 'PhpSpreadsheet library is not installed. Please run: composer require phpoffice/phpspreadsheet');
+        }
+
+        try {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+
+            if (empty($rows)) {
+                return redirect()->route('{{ROUTE_NAME}}.importForm')->with('error', 'File is empty or invalid.');
+            }
+
+            // First row is headers
+            $headers = array_map(function($header) {
+                return trim(str_replace("\xEF\xBB\xBF", '', (string)$header));
+            }, $rows[0]);
+
+            // Map headers to field names
+            $fieldMap = $this->mapHeadersToFields($headers, $fillableFields);
+
+            $imported = 0;
+            $errors = [];
+
+            // Process data rows (skip header row)
+            for ($i = 1; $i < count($rows); $i++) {
+                $row = $rows[$i];
+                $rowNumber = $i + 1;
+
+                // Convert row to array and handle null values
+                $rowData = array_map(function($cell) {
+                    return $cell !== null ? (string)$cell : '';
+                }, $row);
+
+                $result = $this->processRow($rowData, $fieldMap, $rowNumber);
+                if ($result['success']) {
+                    $imported++;
+                } else {
+                    $errors[] = $result['error'];
+                }
+            }
+
+            return $this->returnImportResult($imported, $errors);
+        } catch (\Exception $e) {
+            return redirect()->route('{{ROUTE_NAME}}.importForm')->with('error', 'Failed to read Excel file: ' . $e->getMessage());
+        }
+    }
+
+    private function mapHeadersToFields($headers, $fillableFields)
+    {
+        $fieldMap = [];
+        foreach ($fillableFields as $fieldName) {
+            // Try to find matching header (case-insensitive, with/without spaces/underscores)
+            foreach ($headers as $index => $header) {
+                $normalizedHeader = strtolower(str_replace([' ', '_'], '', (string)$header));
+                $normalizedField = strtolower(str_replace('_', '', $fieldName));
+                if ($normalizedHeader === $normalizedField || strtolower($header) === strtolower($fieldName)) {
+                    $fieldMap[$fieldName] = $index;
+                    break;
+                }
+            }
+        }
+        return $fieldMap;
+    }
+
+    private function processRow($row, $fieldMap, $rowNumber)
+    {
+        $data = [];
+        foreach ($fieldMap as $fieldName => $columnIndex) {
+            if (isset($row[$columnIndex])) {
+                $value = trim((string)$row[$columnIndex]);
+                // Only add non-empty values
+                if ($value !== '') {
+                    $data[$fieldName] = $value;
+                }
+            }
+        }
+
+        // Only create if we have some data
+        if (!empty($data)) {
+            try {
+                ${{MODEL_VARIABLE}} = {{MODEL_NAME}}::create($data);
+
+                // Log activity for import
+                ActivityLogService::logCreate(${{MODEL_VARIABLE}}, 'Imported via bulk import');
+
+                return ['success' => true];
+            } catch (\Exception $e) {
+                return ['success' => false, 'error' => "Row {$rowNumber}: " . $e->getMessage()];
+            }
+        }
+
+        return ['success' => false, 'error' => "Row {$rowNumber}: No data to import."];
+    }
+
+    private function returnImportResult($imported, $errors)
+    {
+        $message = "Imported {$imported} record(s) successfully.";
+        if (!empty($errors)) {
+            $message .= " " . count($errors) . " error(s) occurred.";
+            session()->flash('import_errors', $errors);
+        }
+
+        return redirect()->route('{{ROUTE_NAME}}.index')->with('success', $message);
+    }
+
+    /**
+     * Get list of file field names from model fields
+     * This method checks the generator fields to identify file upload fields
+     */
+    private function getFileFields(): array
+    {
+        $fileFields = [];
+
+        // Get fillable fields from model
+        $model = new {{MODEL_NAME}}();
+        $fillableFields = $model->getFillable();
+
+        // Check each field name to see if it's a file field
+        // File fields typically have names like: image, file, photo, banner, etc.
+        foreach ($fillableFields as $fieldName) {
+            $lowerFieldName = strtolower($fieldName);
+            if (
+                str_contains($lowerFieldName, 'image') ||
+                str_contains($lowerFieldName, 'file') ||
+                str_contains($lowerFieldName, 'photo') ||
+                str_contains($lowerFieldName, 'banner') ||
+                str_contains($lowerFieldName, 'avatar') ||
+                str_contains($lowerFieldName, 'logo') ||
+                str_contains($lowerFieldName, 'thumbnail')
+            ) {
+                $fileFields[] = $fieldName;
+            }
+        }
+
+        return $fileFields;
+    }
+}

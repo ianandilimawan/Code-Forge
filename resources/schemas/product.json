@@ -1,0 +1,55 @@
+{
+    "model": "Product",
+    "fields": [
+        {
+            "name": "name",
+            "dbType": "string",
+            "htmlType": "text",
+            "validation": ["required", "string", "max:255"],
+            "searchable": true,
+            "sortable": true,
+            "description": "Product name"
+        },
+        {
+            "name": "description",
+            "dbType": "text",
+            "htmlType": "textarea",
+            "validation": ["nullable", "string"],
+            "searchable": true,
+            "description": "Product description"
+        },
+        {
+            "name": "price",
+            "dbType": "decimal",
+            "htmlType": "number",
+            "validation": ["required", "numeric", "min:0"],
+            "sortable": true,
+            "description": "Product price"
+        },
+        {
+            "name": "category",
+            "dbType": "string",
+            "htmlType": "select",
+            "validation": ["required", "string"],
+            "options": ["Electronics", "Clothing", "Books", "Home", "Sports"],
+            "sortable": true,
+            "description": "Product category"
+        },
+        {
+            "name": "is_active",
+            "dbType": "boolean",
+            "htmlType": "checkbox",
+            "validation": ["boolean"],
+            "default": true,
+            "description": "Product status"
+        },
+        {
+            "name": "stock_quantity",
+            "dbType": "integer",
+            "htmlType": "number",
+            "validation": ["required", "integer", "min:0"],
+            "sortable": true,
+            "description": "Stock quantity"
+        }
+    ]
+}
