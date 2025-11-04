@@ -1,0 +1,18 @@
+<?php
+
+namespace {{SEEDER_NAMESPACE}};
+
+use Illuminate\Database\Seeder;
+use {{NAMESPACE}}\{{MODEL_NAME}};
+
+class {{SEEDER_NAME}} extends Seeder
+{
+    public function run()
+    {
+        $sampleData = [
+{{SAMPLE_DATA}}
+        ];
+
+        {{MODEL_NAME}}::create($sampleData);
+    }
+}

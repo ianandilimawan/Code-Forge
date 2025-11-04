@@ -1,0 +1,48 @@
+{
+  "name": "ianandilimawan/code-forge",
+  "description": "A modern Laravel CRUD generator for Laravel 12 with Tailwind CSS support",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [
+    "laravel",
+    "generator",
+    "crud",
+    "scaffold",
+    "code-generator",
+    "laravel-generator"
+  ],
+  "authors": [
+    {
+      "name": "Ian Andi Limawan",
+      "email": "ian.andilimawan@gmail.com"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "laravel/framework": "^12.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "IanAndilimawan\\LaravelGenerator\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "IanAndilimawan\\LaravelGenerator\\LaravelGeneratorServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/ianandilimawan/Code-Forge.git"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/ianandilimawan/Code-Forge/issues",
+    "source": "https://github.com/ianandilimawan/Code-Forge"
+  }
+}
