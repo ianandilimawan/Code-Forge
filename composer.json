@@ -1,6 +1,7 @@
 {
   "name": "ianandilimawan/code-forge",
   "description": "A modern Laravel CRUD generator for Laravel 12 with Tailwind CSS support",
+  "version": "1.0.0",
   "type": "library",
   "license": "MIT",
   "keywords": [
